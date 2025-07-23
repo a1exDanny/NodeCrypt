@@ -1,4 +1,4 @@
-// functions/[...all].js
+// functions/proxy.js
 
 export async function onRequest(context) {
     const { request } = context;
