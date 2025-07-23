@@ -1,24 +1,24 @@
-// functions/proxy.js
-// 一个 Cloudflare Pages Functions 示例，用于将 /proxy/* 请求转发到已有的 Worker
+// functions/[...all].js
 
 export async function onRequest(context) {
-    const { request, env } = context;
-    const incomingUrl = new URL(request.url);
+    const { request } = context;
+    const url = new URL(request.url);
+    // 原始路径 + 查询
+    const pathAndQuery = url.pathname + url.search;
+    // 目标 Worker 地址
+    const target = `https://node-crypt.shadowflux.workers.dev${pathAndQuery}`;
 
-    // 去掉 /proxy 前缀，获取原始路径和查询参数
-    const proxyPath = incomingUrl.pathname.replace(/^\/proxy/, "");
-    const targetUrl = `https://node-crypt.shadowflux.workers.dev${proxyPath}${incomingUrl.search}`;
-
-    // 将请求转发给原 Worker，并保留方法、头和 body
-    const response = await fetch(targetUrl, {
+    // 发起代理请求
+    const resp = await fetch(target, {
         method: request.method,
         headers: request.headers,
-        body: request.body
+        body: request.body,            // GET/HEAD 时 body 会自动忽略
+        redirect: "manual",
     });
 
-    // 返回 Worker 的响应
-    return new Response(response.body, {
-        status: response.status,
-        headers: response.headers
+    // 原样返回 Worker 的响应
+    return new Response(resp.body, {
+        status: resp.status,
+        headers: resp.headers,
     });
 }
